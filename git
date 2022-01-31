@@ -1,0 +1,66 @@
+
+#install git on linux server
+sudo apt-get install git
+
+ 
+#cd repository locartion and create folder by mkdir
+
+cd /home/ubuntu/repository/
+sudo mkdir newsite.git
+
+
+#cd webserver location for example nginx go to /var/www/ locartion and create folder by mkdir
+cd /var/www/
+sudo mkdir newsite.git
+
+#go to repository location
+cd /home/ubuntu/repository/newsite.git 
+# run: 
+
+sudo git init --bare
+
+#after this if you check by ls command in terminal on this location see hooks folder and got to hooks folder by 
+cd hooks
+
+#run this comma
+sudo nano  post-receive
+
+##copy and past this code tha start by  #!/bin/sh and end by -f main after this on terminal press control and x save this code 
+
+#!/bin/sh
+git --work-tree=/var/www/newsite.git --git-dir=/home/ubuntu/repository/newsite.git checkout -f main after this on terminal press control and x 
+
+
+# on this folder (hooks run this command) 
+sudo chmod +x post-receive
+
+#and run this command
+cd /home/ubuntu/repository/
+
+# group name example:gitgroup
+sudo groupadd gitgroup
+# my ubuntu user name is ubuntu
+sudo usermod -a -G gitgroup ubuntu
+
+#chown permission
+sudo chown -R ubuntu:gitgroup newsite.git
+
+
+cd /var/www/
+sudo chown -R ubuntu:gitgroup newsite
+
+
+
+#local File computer:
+#if git not added please init git 
+git init
+
+git remote add live ssh://ubuntu@mydomain.com/home/ubuntu/repository/newsite.git
+
+git add .
+git commit -m 'start push'
+git push live main
+
+
+
+git add . git commit -m "Initial Commit" git push remote-name master
