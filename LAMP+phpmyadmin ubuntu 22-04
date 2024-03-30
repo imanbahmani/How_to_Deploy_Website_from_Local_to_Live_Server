@@ -160,3 +160,8 @@ sudo mkdir /usr/share/phpMyAdmin/tmp
 sudo chmod 777 /usr/share/phpMyAdmin/tmp
 sudo chown -R www-data:www-data /usr/share/phpMyAdmin
 sudo systemctl restart nginx php8.1-fpm
+*************************************************************************************************************************
+sudo nano /etc/php/8.1/fpm/php.ini
+upload_max_filesize = 100M
+post_max_size = 100M
+
