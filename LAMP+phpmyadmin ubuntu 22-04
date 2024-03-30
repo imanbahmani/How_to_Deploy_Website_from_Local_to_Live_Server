@@ -95,7 +95,7 @@ sudo systemctl reload nginx
 *************************************************************************************************************************
 sudo mysql
 mysql> CREATE DATABASE gps_tracking_db;
-mysql> CREATE USER 'phpmyadmin'@'%' IDENTIFIED WITH mysql_native_password BY 'Iman2024!Iman2024!!';
+mysql> CREATE USER 'phpmyadmin'@'%' IDENTIFIED WITH mysql_native_password BY 'PASSSWWWWWORD';
 mysql> GRANT ALL ON gps_tracking_db.* TO 'phpmyadmin'@'%';
 mysql> exit
 *************************************************************************************************************************
