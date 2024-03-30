@@ -165,3 +165,6 @@ sudo nano /etc/php/8.1/fpm/php.ini
 upload_max_filesize = 100M
 post_max_size = 100M
 
+sudo nano /etc/nginx/nginx.conf
+sudo systemctl restart nginx php8.1-fpm
+*************************************************************************************************************************
