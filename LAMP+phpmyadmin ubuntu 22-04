@@ -1,0 +1,162 @@
+*************************************************************************************************************************
+sudo apt update
+sudo apt install nginx
+sudo ufw app list
+sudo ufw status
+sudo ufw enable
+sudo ufw allow 'Nginx HTTP'
+sudo ufw allow 'Nginx HTTPS'
+sudo ufw allow 'OpenSSH'
+sudo ufw allow 22
+sudo ufw allow 8080,8081,8082,8083,8084,8085,8086,8087,8088,8089,8090
+ip addr show
+curl -4 icanhazip.com
+*************************************************************************************************************************
+sudo apt install mysql-server
+sudo mysql_secure_installation
+sudo mysql
+*************************************************************************************************************************
+sudo apt install php8.1-fpm php-mysql
+sudo apt-get install -y php8.1-cli php8.1-common php8.1-mysql php8.1-zip php8.1-gd php8.1-mbstring php8.1-curl php8.1-xml php8.1-bcmath
+*************************************************************************************************************************
+sudo apt update
+curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
+HASH=`curl -sS https://composer.github.io/installer.sig`
+echo $HASH
+php -r "if (hash_file('SHA384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+composer
+*************************************************************************************************************************
+sudo mkdir /var/www/gps_tracking
+sudo chown -R $USER:$USER /var/www/gps_tracking/
+sudo nano /etc/nginx/sites-available/gps_tracking
+**********************************************************************************************
+server {
+    listen 80 default_server;
+
+    server_name example.com www.example.com;
+
+    #access_log /srv/www/example.com/logs/access.log;
+    #error_log /srv/www/example.com/logs/error.log;
+
+    root /srv/www/example.com/public;
+    index index.php index.html;
+
+    # serve static files directly
+	location ~* \.(jpg|jpeg|gif|css|png|js|ico|html)$ {
+		access_log off;
+		expires max;
+		log_not_found off;
+	}
+
+	# removes trailing slashes (prevents SEO duplicate content issues)
+	if (!-d $request_filename)
+	{
+		rewrite ^/(.+)/$ /$1 permanent;
+	}
+
+	# enforce NO www
+	if ($host ~* ^www\.(.*))
+	{
+		set $host_without_www $1;
+		rewrite ^/(.*)$ $scheme://$host_without_www/$1 permanent;
+	}
+
+	# unless the request is for a valid file (image, js, css, etc.), send to bootstrap
+	if (!-e $request_filename)
+	{
+		rewrite ^/(.*)$ /index.php?/$1 last;
+		break;
+	}
+
+	location / {
+		try_files $uri $uri/ /index.php?$query_string;
+	}
+
+	location ~* \.php$ {
+        try_files $uri = 404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php5-fpm.sock; # may also be: 127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.ht {
+		deny all;
+	}
+}
+**********************************************************************************************
+sudo ln -s /etc/nginx/sites-available/gps_tracking /etc/nginx/sites-enabled/
+sudo unlink /etc/nginx/sites-enabled/default
+sudo rm /etc/nginx/sites-available/default
+sudo nginx -t
+sudo systemctl reload nginx
+*************************************************************************************************************************
+sudo mysql
+mysql> CREATE DATABASE gps_tracking_db;
+mysql> CREATE USER 'phpmyadmin'@'%' IDENTIFIED WITH mysql_native_password BY 'Iman2024!Iman2024!!';
+mysql> GRANT ALL ON gps_tracking_db.* TO 'phpmyadmin'@'%';
+mysql> exit
+*************************************************************************************************************************
+phpmyadmin
+*************************************************************************************************************************
+wget https://files.phpmyadmin.net/phpMyAdmin/5.2.0/phpMyAdmin-5.2.0-all-languages.tar.gz
+tar -zxvf phpMyAdmin-5.2.0-all-languages.tar.gzCOPY
+sudo mv phpMyAdmin-5.2.0-all-languages /usr/share/phpMyAdminCOPIED!
+sudo mv /usr/share/phpMyAdmin/config.sample.inc.php /usr/share/phpMyAdmin/config.inc.php
+sudo nano /usr/share/phpMyAdmin/config.inc.php
+*************************************************************************************************************************
+$cfg['blowfish_secret'] = 'CfX1la/aG83gx1{7rADus,iqz8RzeV8x'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */COPY
+/* User used to manipulate with storage */
+$cfg['Servers'][$i]['controlhost'] = 'localhost';
+// $cfg['Servers'][$i]['controlport'] = '';
+$cfg['Servers'][$i]['controluser'] = 'pmauser';
+$cfg['Servers'][$i]['controlpass'] = 'mypmapass';
+*************************************************************************************************************************
+sudo mysql < /usr/share/phpMyAdmin/sql/create_tables.sql -u root -p
+sudo mysql -u root -p
+*************************************************************************************************************************
+CREATE USER 'pmauser'@'localhost' IDENTIFIED BY 'mypmapass';
+GRANT ALL PRIVILEGES ON phpmyadmin.* TO 'pmauser'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+EXIT;
+*************************************************************************************************************************
+sudo nano /etc/nginx/conf.d/phpmyadmin.confCOPY
+*************************************************************************************************************************
+server {
+   listen 80;
+   server_name 127.0.0.1 or any ip;
+   root /usr/share/phpMyAdmin;
+
+   location / {
+      index index.php;
+   }
+
+## Images and static content is treated different
+   location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico|xml)$ {
+      access_log off;
+      expires 30d;
+   }
+
+   location ~ /\.ht {
+      deny all;
+   }
+
+   location ~ /(libraries|setup/frames|setup/libs) {
+      deny all;
+      return 404;
+   }
+
+   location ~ \.php$ {
+      include /etc/nginx/fastcgi_params;
+      fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+      fastcgi_index index.php;
+      fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+   }
+}
+*************************************************************************************************************************
+sudo mkdir /usr/share/phpMyAdmin/tmp
+sudo chmod 777 /usr/share/phpMyAdmin/tmp
+sudo chown -R www-data:www-data /usr/share/phpMyAdmin
+sudo systemctl restart nginx php8.1-fpm
