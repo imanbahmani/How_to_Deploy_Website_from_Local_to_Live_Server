@@ -173,3 +173,8 @@ sudo nano /etc/nginx/nginx.conf
 
 sudo systemctl restart nginx php8.1-fpm
 *************************************************************************************************************************
+
+
+php artisan key:generate
+sudo chown -R www-data.www-data /var/www/travellist/storage
+sudo chown -R www-data.www-data /var/www/travellist/bootstrap/cache
